@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SHADOW VAULT | Anonymous Campus</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+    :root {
+        --bg-deep: #040a09;
+        --bg-card: #02028c;
+        --primary: #7c3aed; /* The neon purple from your image */
+        --primary-hover: #6d28d9;
+        --border: #27272a;
+        --text-dim: #a1a1aa;
+    }
+
+    body {
+        font-family: 'Inter', -apple-system, sans-serif;
+        background: var(--bg-deep);
+        color: #fafafa;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+    }
+
+    .container, .box {
+        width: 420px;
+        background: var(--bg-card);
+        padding: 32px;
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+
+    h2, h3 {
+        margin-top: 0;
+        font-weight: 700;
+        letter-spacing: -0.025em;
+        color: #fff;
+    }
+
+    input {
+        width: 100%;
+        padding: 12px 16px;
+        margin-bottom: 12px;
+        background: #09090b;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        color: #fff;
+        font-size: 14px;
+        transition: border-color 0.2s;
+        box-sizing: border-box;
+    }
+
+    input:focus {
+        outline: none;
+        border-color: var(--primary);
+    }
+
+    button {
+        width: 100%;
+        padding: 12px;
+        background: var(--primary);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.2s;
+        margin-top: 8px;
+    }
+
+    button:hover {
+        background: var(--primary-hover);
+        transform: translateY(-1px);
+    }
+
+    button.secondary {
+        background: transparent;
+        border: 1px solid var(--border);
+        margin-top: 4px;
+    }
+
+    button.secondary:hover {
+        background: #27272a;
+    }
+
+    hr {
+        border: 0;
+        border-top: 1px solid var(--border);
+        margin: 24px 0;
+    }
+
+    #chat-area, #chat-box {
+        height: 300px;
+        background: #09090b;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 16px;
+        margin: 16px 0;
+        overflow-y: auto;
+    }
+
+    .msg {
+        background: #18181b;
+        padding: 8px 12px;
+        border-radius: 8px;
+        margin-bottom: 8px;
+        border-left: 3px solid var(--primary);
+        font-size: 14px;
+    }
+
+    .hidden { display: none; }
+</style>
+</head>
+<body>
+    <div class="container">
+        <div id="auth-screen">
+            <h2 style="text-align: center; color: #3d5afe;">SHADOW VAULT</h2>
+            <input id="username" placeholder="Username">
+            <input id="password" type="password" placeholder="Password">
+            <button onclick="login()">Login</button>
+            <button class="secondary" onclick="signup()">Sign Up</button>
+        </div>
+
+        <div id="dashboard" class="hidden">
+            <h3>Welcome, Ghost</h3>
+            <div id="active-list" style="font-size: 0.8em; color: #888; margin-bottom: 10px;"></div>
+            <button onclick="joinPerm('General')">Join General Community</button>
+            <hr style="border: 0; border-top: 1px solid #333;">
+            <input id="timer" type="number" placeholder="Timer (Minutes)" value="5">
+            <button class="secondary" onclick="createPhantom()">+ Create Phantom Chat</button>
+            <input id="join-room-id" placeholder="Room ID (e.g. P-X1Y2)">
+            <input id="join-otp" placeholder="OTP">
+            <button class="secondary" onclick="joinPhantom()">Join Phantom Room</button>
+        </div>
+
+        <div id="chat-room" class="hidden">
+            <h4 id="room-header">Room</h4>
+            <div id="chat-box"></div>
+            <input id="message-input" placeholder="Say something anonymous...">
+            <button onclick="sendMessage()">Send Message</button>
+            <button class="secondary" onclick="exitChat()">Exit Room</button>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

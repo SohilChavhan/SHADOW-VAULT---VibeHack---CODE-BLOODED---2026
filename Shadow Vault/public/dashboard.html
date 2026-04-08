@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SHADOW VAULT | Dashboard</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+    :root {
+        --bg-deep: #09090b;
+        --bg-card: #18181b;
+        --primary: #7c3aed; /* The neon purple from your image */
+        --primary-hover: #6d28d9;
+        --border: #27272a;
+        --text-dim: #a1a1aa;
+    }
+
+    body {
+        font-family: 'Inter', -apple-system, sans-serif;
+        background: var(--bg-deep);
+        color: #fafafa;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+    }
+
+    .container, .box {
+        width: 420px;
+        background: var(--bg-card);
+        padding: 32px;
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+
+    h2, h3 {
+        margin-top: 0;
+        font-weight: 700;
+        letter-spacing: -0.025em;
+        color: #fff;
+    }
+
+    input {
+        width: 100%;
+        padding: 12px 16px;
+        margin-bottom: 12px;
+        background: #09090b;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        color: #fff;
+        font-size: 14px;
+        transition: border-color 0.2s;
+        box-sizing: border-box;
+    }
+
+    input:focus {
+        outline: none;
+        border-color: var(--primary);
+    }
+
+    button {
+        width: 100%;
+        padding: 12px;
+        background: var(--primary);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.2s;
+        margin-top: 8px;
+    }
+
+    button:hover {
+        background: var(--primary-hover);
+        transform: translateY(-1px);
+    }
+
+    button.secondary {
+        background: transparent;
+        border: 1px solid var(--border);
+        margin-top: 4px;
+    }
+
+    button.secondary:hover {
+        background: #27272a;
+    }
+
+    hr {
+        border: 0;
+        border-top: 1px solid var(--border);
+        margin: 24px 0;
+    }
+
+    #chat-area, #chat-box {
+        height: 300px;
+        background: #09090b;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 16px;
+        margin: 16px 0;
+        overflow-y: auto;
+    }
+
+    .msg {
+        background: #18181b;
+        padding: 8px 12px;
+        border-radius: 8px;
+        margin-bottom: 8px;
+        border-left: 3px solid var(--primary);
+        font-size: 14px;
+    }
+
+    .hidden { display: none; }
+</style>
+</head>
+<body>
+    <div class="box">
+        <h2>SHADOWBOARD</h2>
+        <p id="welcome-msg">Syncing Identity...</p>
+        <button class="secondary" onclick="joinPerm('General')">Join General Community</button>
+        <hr>
+        <h4>Create Phantom Chat</h4>
+        <input id="timer" type="number" value="5" placeholder="Minutes until Nuke">
+        <button onclick="createPhantom()">Generate Phantom Link</button>
+        <hr>
+        <input id="join-id" placeholder="Room ID">
+        <input id="join-otp" placeholder="OTP">
+        <button class="secondary" onclick="joinPhantom()">Join Existing Phantom</button>
+    </div>
+
+    <div id="chat-window" class="box hidden">
+        <h3 id="room-title">Room</h3>
+        <div id="chat-area"></div>
+        <input id="msg-input" placeholder="Type anonymously...">
+        <button onclick="send()">Send</button>
+        <button class="secondary" onclick="closeChat()">Close & Clear</button>
+    </div>
+
+    <script>
+        const socket = io();
+        const user = sessionStorage.getItem('ghostUser');
+        let currentRoom = null;
+        let currentType = null;
+
+        if (!user) { window.location.href = '/'; }
+        document.getElementById('welcome-msg').innerText = `Logged in as: ${user}`;
+
+        // Tell the server who we are in this new tab
+        socket.emit('reconnect_user', user);
+
+        function createPhantom() {
+            const mins = document.getElementById('timer').value;
+            socket.emit('create_phantom', { timerMinutes: parseInt(mins) });
+        }
+
+        socket.on('phantom_created', (data) => {
+            alert(`SHARE THESE:\nRoom ID: ${data.roomId}\nOTP: ${data.otp}`);
+        });
+
+        function joinPerm(name) {
+            socket.emit('join_perm', name);
+        }
+
+        function joinPhantom() {
+            const id = document.getElementById('join-id').value;
+            const otp = document.getElementById('join-otp').value;
+            socket.emit('join_phantom', { roomId: id, otp: otp });
+        }
+
+        socket.on('joined_room', (data) => {
+            currentRoom = data.roomId;
+            currentType = data.type;
+            document.getElementById('chat-window').classList.remove('hidden');
+            document.getElementById('room-title').innerText = `${data.type.toUpperCase()}: ${data.roomId}`;
+        });
+
+        function send() {
+            const msg = document.getElementById('msg-input').value;
+            socket.emit('send_msg', { roomId: currentRoom, msg: msg, type: currentType });
+            document.getElementById('msg-input').value = '';
+        }
+
+        socket.on('new_msg', (data) => {
+            const div = document.createElement('div');
+            div.innerHTML = `<b>Anonymous:</b> ${data.text}`;
+            document.getElementById('chat-area').appendChild(div);
+        });
+
+        socket.on('nuke_notice', (msg) => {
+            alert(msg);
+            location.reload();
+        });
+
+        function closeChat() { document.getElementById('chat-window').classList.add('hidden'); }
+    </script>
+</body>
+</html>
